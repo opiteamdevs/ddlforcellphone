@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Docedleite - Processando...</title>
+    <!-- SDK oficial do Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <p id="status">Processando retorno da verificação...</p>
+
+    <script>
+        const SUPABASE_URL = 'https://aoenxxscghmtzzbarnyy.supabase.co';
+        const SUPABASE_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvZW54eHNjZ2htdHp6YmFybnl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxOTMxNjksImV4cCI6MjEwMzc2OTE2OX0.xpDzrKo9N5y27GSTiBYs7VI6nl0UtFjI9TLPG7ZSmUY';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+        async function processarCallback() {
+            const statusEl = document.getElementById('status');
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const verificationId = urlParams.get('verification_id');
+
+            if (!verificationId) {
+                statusEl.innerText = "Erro: Nenhum ID de verificação encontrado na URL.";
+                return;
+            }
+
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+            if (!session) {
+                statusEl.innerText = "Erro: Usuário não logado.";
+                return;
+            }
+
+            const userId = session.user.id;
+
+            try {
+                const { error: updateError } = await supabase
+                    .from('profiles')
+                    .update({
+                        age_verified: true,
+                        verification_id: verificationId,
+                        verified_at: new Date().toISOString()
+                    })
+                    .eq('id', userId);
+
+                if (updateError) throw updateError;
+
+                statusEl.innerText = "Verificação concluída com sucesso! Redirecionando...";
+
+                const isMobileSubdomain = window.location.hostname.startsWith('m.');
+                const targetFeed = isMobileSubdomain ? 'https://m.docedleite.com.br/fyp' : 'https://docedleite.com.br/fyp';
+
+                window.location.href = targetFeed;
+
+            } catch (err) {
+                console.error("Erro ao atualizar banco:", err);
+                statusEl.innerText = "Erro ao atualizar o status no banco de dados.";
+            }
+        }
+
+        window.onload = processarCallback;
+    </script>
+</body>
+</html>

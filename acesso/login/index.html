@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 maximum-scale=1.0, user-scalable=no">
+    <title>Entrar - Rede Doce de Leite</title>
+    <meta name="theme-color" content="#8d6e63">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fffaf0;
+            color: #3e2723;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .card {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(111, 78, 55, 0.1);
+            max-width: 400px;
+            width: 90%;
+            border: 2px solid #d7ccc8;
+            text-align: center;
+        }
+        h2 { color: #8d6e63; margin-bottom: 24px; }
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            border: 1px solid #d7ccc8;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            background-color: #faf8f5;
+        }
+        input:focus { border-color: #8d6e63; }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: #8d6e63;
+            color: white;
+            transition: background-color 0.2s;
+        }
+        button:hover { background-color: #6d4c41; }
+        .toggle-link {
+            display: inline-block;
+            color: #8d6e63;
+            font-size: 0.9rem;
+            text-decoration: underline;
+            margin-top: 5px;
+        }
+        .toggle-link:hover { color: #6d4c41; }
+        .msg { margin-top: 15px; font-size: 0.9rem; color: #d9534f; }
+        .success { color: #4caf50; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Entrar no Caos 🍮</h2>
+        <form id="login-form">
+            <input type="email" id="email" placeholder="Seu e-mail" required autocomplete="email">
+            <input type="password" id="password" placeholder="Sua senha" required autocomplete="current-password">
+            <button type="submit" id="btn-entrar">Entrar</button>
+        </form>
+        <a href="/acesso/cadastro/" class="toggle-link">Não tem uma conta? Cadastre-se</a>
+        <div class="msg" id="msg"></div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        const SUPABASE_URL = 'https://aoenxxscghmtzzbarnyy.supabase.co';
+        const SUPABASE_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvZW54eHNjZ2htdHp6YmFybnl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxOTMxNjksImV4cCI6MjEwMzc2OTE2OX0.xpDzrKo9N5y27GSTiBYs7VI6nl0UtFjI9TLPG7ZSmUY'; 
+        
+        const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+        const form = document.getElementById('login-form');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const msgDiv = document.getElementById('msg');
+            msgDiv.className = 'msg';
+            msgDiv.textContent = 'Entrando...';
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                msgDiv.textContent = 'Preencha todos os campos!';
+                return;
+            }
+
+            // Realiza a autenticação com o banco de dados do Supabase
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            
+            if (error) {
+                // Traduz ou exibe a mensagem de erro do Supabase (ex: credenciais inválidas)
+                msgDiv.textContent = `Erro ao entrar: ${error.message}`;
+            } else {
+                msgDiv.className = 'msg success';
+                msgDiv.textContent = 'Login efetuado com sucesso! Redirecionando...';
+                
+                // Opcional: Redireciona o usuário para a página principal após alguns instantes
+                setTimeout(() => {
+                    window.location.href = '/'; // Altere para a página de destino desejada
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>

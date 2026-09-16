@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 maximum-scale=1.0, user-scalable=no">
+    <title>Criar Publicação - Rede Doce de Leite</title>
+    <meta name="theme-color" content="#8d6e63">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fffaf0;
+            color: #3e2723;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: #ffffff;
+            min-height: 100vh;
+            border-left: 2px solid #d7ccc8;
+            border-right: 2px solid #d7ccc8;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            padding: 20px;
+            border-bottom: 2px solid #d7ccc8;
+            background-color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 { font-size: 1.2rem; color: #8d6e63; }
+        header a {
+            color: #8d6e63;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        header a:hover { text-decoration: underline; }
+
+        .content {
+            flex: 1;
+            padding: 24px;
+        }
+        .post-card {
+            background: #faf8f5;
+            border: 2px solid #d7ccc8;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .post-card h2 {
+            font-size: 1.1rem;
+            color: #6d4c41;
+            margin-bottom: 12px;
+        }
+        textarea {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #d7ccc8;
+            border-radius: 8px;
+            resize: none;
+            height: 140px;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            background: #fff;
+            color: #3e2723;
+            margin-bottom: 16px;
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: #6d4c41;
+            cursor: pointer;
+        }
+        .checkbox-container input {
+            width: 18px;
+            height: 18px;
+            accent-color: #8d6e63;
+            cursor: pointer;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #8d6e63;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #6d4c41; }
+        button:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        nav {
+            display: flex;
+            border-top: 2px solid #d7ccc8;
+            background: #fff;
+            position: sticky;
+            bottom: 0;
+        }
+        nav a {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            text-decoration: none;
+            color: #8d6e63;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        nav a:hover, nav a.active {
+            background-color: #f5f0eb;
+            color: #3e2723;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>🍮 Doce de Leite</h1>
+        </header>
+
+        <div class="content">
+            <div class="post-card">
+                <h2>O que está acontecendo no caldeirão?</h2>
+                <textarea id="post-text" placeholder="Compartilhe seus pensamentos com a comunidade..."></textarea>
+                
+                <label class="checkbox-container">
+                    <input type="checkbox" id="check-ddl-ad"> Destacar como anúncio
+                </label>
+
+                <button id="btn-publicar">Publicar no Feed</button>
+            </div>
+        </div>
+
+        <nav>
+            <a href="/fyp/">Início</a>
+            <a href="/createpost/" class="active">Criar Post</a>
+            <a href="#" id="nav-meu-perfil">Meu Perfil</a>
+        </nav>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        const SUPABASE_URL = 'https://aoenxxscghmtzzbarnyy.supabase.co';
+        const SUPABASE_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvZW54eHNjZ2htdHp6YmFybnl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxOTMxNjksImV4cCI6MjEwMzc2OTE2OX0.xpDzrKo9N5y27GSTiBYs7VI6nl0UtFjI9TLPG7ZSmUY'; 
+        
+        const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+        let usuarioLogado = null;
+
+        const listaNegraPalavras = [
+            "spam", "scam", "phishing", "hack", "hacker", "cracker", "bot", 
+            "gratis", "free", "ganhedinheiro", "rendaextra", "trabalheemcasa", 
+            "aposta", "bet", "cassino", "slot", "tigrinho", "fortune", 
+            "dinheirofacil", "trader", "sinal", "telegram.me", "t.me", 
+            "porn", "sex", "xxx", "nude", "nudes", "18+", "conteudoadulto", 
+            "idiota", "imbecil", "estupido", "burro", "otario", "patife", 
+            "canalha", "lixo", "desgraçado", "maldito", "filhodaputa", 
+            "puta", "caralho", "merda", "bosta", "porra", "arrombado", 
+            "corno", "vagabundo", "golpe", "piramide"
+        ];
+
+        function verificarConteudoProibido(texto) {
+            const textoFormatado = texto.toLowerCase();
+            for (let palavra of listaNegraPalavras) {
+                const regex = new RegExp(`\\b${palavra}\\b`, 'i');
+                if (regex.test(textoFormatado) || textoFormatado.includes(palavra)) {
+                    return {
+                        detected: "blocknow()",
+                        Violation: "violation of guidelines"
+                    };
+                }
+            }
+            return null;
+        }
+
+        async function initCreatePost() {
+            const navMeuPerfil = document.getElementById('nav-meu-perfil');
+
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session || !session.user) {
+                    throw new Error("User is not logged in");
+                }
+
+                usuarioLogado = session.user;
+
+                const { data: perfil } = await supabase
+                    .from('profiles')
+                    .select('username')
+                    .eq('id', usuarioLogado.id)
+                    .single();
+
+                if (perfil) {
+                    navMeuPerfil.href = `/u/?q=${perfil.username}`;
+                }
+            } catch (err) {
+                if (err.message === "User is not logged in") {
+                    alert("User is not logged in");
+                    window.location.href = '/acesso/login/';
+                } else {
+                    alert('Erro de autenticação: ' + err.message);
+                }
+            }
+        }
+
+        document.getElementById('btn-publicar').addEventListener('click', async () => {
+            const texto = document.getElementById('post-text').value.trim();
+            const ehAnuncio = document.getElementById('check-ddl-ad').checked;
+
+            if (!texto) {
+                alert('Escreva algo antes de publicar!');
+                return;
+            }
+
+            const resultadoValidacao = verificarConteudoProibido(texto);
+            if (resultadoValidacao) {
+                console.warn(JSON.stringify(resultadoValidacao, null, 2));
+                alert("⚠️ Conteúdo bloqueado por violação das diretrizes da OPI Team.");
+                return;
+            }
+
+            const btn = document.getElementById('btn-publicar');
+
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session || !session.user) {
+                    throw new Error("User is not logged in");
+                }
+
+                btn.disabled = true;
+                btn.textContent = 'Publicando...';
+
+                // Inserção com o isddlAd dinâmico baseado no checkbox
+                const { error } = await supabase
+                    .from('posts')
+                    .insert([{
+                        title: texto,
+                        creator: session.user.id,
+                        like: [],
+                        comments: [],
+                        isddlAd: ehAnuncio // <- Aqui entra a flag do DDL Ads!
+                    }]);
+
+                if (error) throw error;
+
+                window.location.href = '/fyp/';
+
+            } catch (err) {
+                if (err.message === "User is not logged in") {
+                    alert("User is not logged in");
+                    window.location.href = '/acesso/login/';
+                } else {
+                    alert('Erro ao publicar: ' + err.message);
+                    btn.disabled = false;
+                    btn.textContent = 'Publicar no Feed';
+                }
+            }
+        });
+
+        initCreatePost();
+    </script>
+</body>
+</html>

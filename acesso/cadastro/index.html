@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 maximum-scale=1.0, user-scalable=no">
+    <title>Criar Conta - Rede Doce de Leite</title>
+    <meta name="theme-color" content="#8d6e63">
+    <style>
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fffaf0;
+            color: #3e2723;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: #ffffff;
+            border: 2px solid #d7ccc8;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 10px rgba(111, 78, 55, 0.05);
+        }
+        h1 { font-size: 1.6rem; color: #6d4c41; margin-bottom: 20px; text-align: center; }
+        .input-group {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #6d4c41;
+            margin-bottom: 6px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d7ccc8;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+            background-color: #faf8f5;
+            color: #3e2723;
+        }
+        input:focus { border-color: #8d6e63; }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: #8d6e63;
+            color: white;
+            transition: background 0.2s;
+        }
+        .btn:hover { background-color: #6d4c41; }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .links {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 0.9rem;
+        }
+        .links a {
+            color: #8d6e63;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .links a:hover { text-decoration: underline; }
+        .error-msg {
+            color: #d32f2f;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🍮 Criar Conta</h1>
+        <div id="error-container" class="error-msg"></div>
+
+        <div class="input-group">
+            <label>Nome de Exibição (Ex: João Doce)</label>
+            <input type="text" id="display-name" placeholder="Como as pessoas vão te ver">
+        </div>
+
+        <div class="input-group">
+            <label>Username (Ex: joaodoce)</label>
+            <input type="text" id="username" placeholder="Seu identificador único">
+        </div>
+
+        <div class="input-group">
+            <label>E-mail</label>
+            <input type="email" id="email" placeholder="seu@email.com">
+        </div>
+
+        <div class="input-group">
+            <label>Senha</label>
+            <input type="password" id="password" placeholder="Sua senha secreta">
+        </div>
+
+        <!-- Turnstile removido daqui -->
+
+        <button id="btn-cadastrar" class="btn">Cadastrar</button>
+
+        <div class="links">
+            Já tem uma conta? <a href="/acesso/login/">Entrar</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        const SUPABASE_URL = 'https://aoenxxscghmtzzbarnyy.supabase.co';
+        const SUPABASE_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvZW54eHNjZ2htdHp6YmFybnl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxOTMxNjksImV4cCI6MjEwMzc2OTE2OX0.xpDzrKo9N5y27GSTiBYs7VI6nl0UtFjI9TLPG7ZSmUY'; 
+        
+        const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+            auth: {
+                storage: window.localStorage,
+                persistSession: true,
+                autoRefreshToken: true,
+            }
+        });
+
+        const btnCadastrar = document.getElementById('btn-cadastrar');
+        const errorContainer = document.getElementById('error-container');
+
+        btnCadastrar.addEventListener('click', async () => {
+            errorContainer.textContent = '';
+            
+            const displayName = document.getElementById('display-name').value.trim();
+            const username = document.getElementById('username').value.trim().toLowerCase();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!displayName || !username || !email || !password) {
+                errorContainer.textContent = 'Preencha todos os campos!';
+                return;
+            }
+
+            if (username.includes(' ') || username.includes('@')) {
+                errorContainer.textContent = 'O username não pode ter espaços ou @.';
+                return;
+            }
+
+            btnCadastrar.disabled = true;
+            btnCadastrar.textContent = 'Criando conta...';
+
+            // 1. Cadastra o usuário no Auth do Supabase
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email,
+                password
+            });
+
+            if (authError) {
+                errorContainer.textContent = authError.message;
+                btnCadastrar.disabled = false;
+                btnCadastrar.textContent = 'Cadastrar';
+                return;
+            }
+
+            const userId = authData.user?.id;
+
+            if (userId) {
+                // 2. Insere os dados na tabela profiles
+                const { error: profileError } = await supabase
+                    .from('profiles')
+                    .upsert({
+                        id: userId,
+                        email: email,
+                        username: username,
+                        display_name: displayName,
+                        avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + username
+                    });
+
+                if (profileError) {
+                    errorContainer.textContent = 'Erro ao salvar perfil: ' + profileError.message;
+                    btnCadastrar.disabled = false;
+                    btnCadastrar.textContent = 'Cadastrar';
+                    return;
+                }
+            }
+
+            // Sucesso! Redireciona para o feed
+            window.location.href = '/fyp/';
+        });
+    </script>
+</body>
+</html>
